@@ -10,6 +10,7 @@ import {
   View,
   type PressableProps,
   type StyleProp,
+  type TextInputInstance,
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
@@ -243,7 +244,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
-export const Input = React.forwardRef<TextInput, TextInputProps & { focused?: boolean }>(function Input(
+export const Input = React.forwardRef<TextInputInstance, TextInputProps & { focused?: boolean }>(function Input(
   { style, focused, ...props },
   ref,
 ) {

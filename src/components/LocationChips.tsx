@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Location } from '@/db/schema';
 import { Chip, Row } from './ui';
@@ -28,7 +28,7 @@ export function LocationChips({
   onSelect: (id: string | null) => void;
   totalItems: number;
 }) {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const chipX = useRef(new Map<string, { x: number; w: number }>());
   const [viewW, setViewW] = useState(0);
   const [contentW, setContentW] = useState(0);
