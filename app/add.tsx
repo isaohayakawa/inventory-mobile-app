@@ -7,9 +7,9 @@ import { Button, Card, Field, Input, Row, Screen, Segmented, Stepper } from '@/c
 import { DateInput, LocationSelect, SelectField } from '@/components/pickers';
 import { colors, type } from '@/theme';
 import { suggest, nameOf, similarItems, type Suggestion } from '@/services/search';
-import { createItem, addStock, restoreItem, type NewPackageInput } from '@/services/inventory';
+import { createItem, addStock, archiveItem, restoreItem, undoAdd, type NewPackageInput } from '@/services/inventory';
 import { getUnitSystem, sizeUnits } from '@/services/settings';
-import { activeLocations } from '@/services/snapshot';
+import { activeLocations, locationName } from '@/services/snapshot';
 import { formatUnits, LEVELS, plural } from '@/domain/quantity';
 import type { CommonItem } from '@/data/commonItems';
 import type { Item } from '@/db/schema';
@@ -150,7 +150,23 @@ export default function AddItemScreen() {
     });
     if (!res) return;
     lastLocationId = locationId;
-    showToast(`Added ${name.trim()}`);
+    showToast(
+      `Added ${name.trim()} to ${locationName(snapshot, locationId)}`,
+      {
+        label: 'Undo',
+        // The item was created just now, so undoing removes it too (archived, so history is kept).
+        onPress: () =>
+          mutate((c) => {
+            undoAdd(c, res.eventIds);
+            archiveItem(c, res.itemId);
+          }),
+      },
+      {
+        label: 'Change',
+        onPress: () =>
+          router.push({ pathname: '/item/[id]', params: { id: res.itemId, moveLot: res.lotId, moveCount: String(count) } }),
+      },
+    );
     router.back();
   };
 
@@ -301,7 +317,7 @@ export default function AddItemScreen() {
             />
           </Field>
 
-          <Button label="Add to inventory" variant="primary" onPress={submit} />
+          <Button label={locationId ? `Add to ${locationName(snapshot, locationId)}` : 'Add to inventory'} variant="primary" onPress={submit} />
         </>
       ) : null}
 

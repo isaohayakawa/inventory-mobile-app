@@ -12,9 +12,13 @@ import { formatShortDate, relativeDay } from '@/lib/time';
 import type { InventoryEvent, StockLot } from '@/db/schema';
 
 export default function ItemDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // ?moveLot=…&moveCount=… (from "Change" after adding) opens that lot's Move panel.
+  const { id, moveLot, moveCount } = useLocalSearchParams<{ id: string; moveLot?: string; moveCount?: string }>();
   const { snapshot, ctx, mutate, version } = useApp();
-  const [selected, setSelected] = useState<StockLot | null>(null);
+  const [selected, setSelected] = useState<StockLot | null>(
+    () => (moveLot && snapshot.items.find((s) => s.item.id === id)?.lots.find((l) => l.id === moveLot)) || null,
+  );
+  const [movingCount, setMovingCount] = useState(moveLot ? Number(moveCount) || 1 : undefined);
   const summary = snapshot.items.find((s) => s.item.id === id);
   const history = useMemo(() => (id ? itemHistory(ctx, id, 20) : []), [ctx, id, version]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -132,7 +136,15 @@ export default function ItemDetailScreen() {
         )}
       </Card>
 
-      <LotSheet lot={selected} item={item} onClose={() => setSelected(null)} />
+      <LotSheet
+        lot={selected}
+        item={item}
+        moveCount={movingCount}
+        onClose={() => {
+          setSelected(null);
+          setMovingCount(undefined);
+        }}
+      />
     </Screen>
   );
 }

@@ -3,43 +3,40 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '@/theme';
 
-/** Short message with an optional action (e.g. "Undo"); hides itself after 5 seconds. */
-export function Toast({
-  message,
-  actionLabel,
-  onAction,
-  onHide,
-}: {
-  message: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  onHide: () => void;
-}) {
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
+/** Short message with optional actions (e.g. "Undo"); hides itself after a few seconds. */
+export function Toast({ message, actions, onHide }: { message: string; actions: ToastAction[]; onHide: () => void }) {
   const insets = useSafeAreaInsets();
   const hideRef = useRef(onHide);
   useEffect(() => {
     hideRef.current = onHide;
   }, [onHide]);
   useEffect(() => {
-    const t = setTimeout(() => hideRef.current(), 5000);
+    // Stay a little longer when there's something to tap.
+    const t = setTimeout(() => hideRef.current(), actions.length > 0 ? 8000 : 5000);
     return () => clearTimeout(t);
-  }, []);
+  }, [actions.length]);
   return (
     <View style={[styles.wrap, { bottom: insets.bottom + 96 }]} pointerEvents="box-none">
       <View style={styles.toast} accessibilityLiveRegion="polite">
         <Text style={styles.text}>{message}</Text>
-        {actionLabel && onAction ? (
+        {actions.map((a) => (
           <Pressable
+            key={a.label}
             onPress={() => {
-              onAction();
+              a.onPress();
               onHide();
             }}
             accessibilityRole="button"
             hitSlop={10}
           >
-            <Text style={styles.action}>{actionLabel}</Text>
+            <Text style={styles.action}>{a.label}</Text>
           </Pressable>
-        ) : null}
+        ))}
       </View>
     </View>
   );

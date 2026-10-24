@@ -14,17 +14,24 @@ import { formatShortDate } from '@/lib/time';
 type Mode = 'menu' | 'move' | 'fix' | 'expiry' | 'remove' | 'open';
 
 /** Everything you can do with one stock lot: use, set level, open, move, fix count, expiry, remove. */
-export function LotSheet({ lot, item, onClose }: { lot: StockLot | null; item: Item; onClose: () => void }) {
+export function LotSheet({ lot, item, onClose, moveCount }: LotSheetProps & { lot: StockLot | null }) {
   if (!lot) return null;
   // Keyed by lot so every opened lot starts with fresh state.
-  return <LotSheetContent key={lot.id} lot={lot} item={item} onClose={onClose} />;
+  return <LotSheetContent key={lot.id} lot={lot} item={item} onClose={onClose} moveCount={moveCount} />;
 }
 
-function LotSheetContent({ lot, item, onClose }: { lot: StockLot; item: Item; onClose: () => void }) {
+interface LotSheetProps {
+  item: Item;
+  onClose: () => void;
+  /** Opens straight into Move with this many (packs or units) preselected, e.g. to fix where stock was just added. */
+  moveCount?: number;
+}
+
+function LotSheetContent({ lot, item, onClose, moveCount: initialMoveCount }: LotSheetProps & { lot: StockLot }) {
   const { snapshot, mutate, showToast } = useApp();
-  const [mode, setMode] = useState<Mode>('menu');
+  const [mode, setMode] = useState<Mode>(initialMoveCount ? 'move' : 'menu');
   const [moveTo, setMoveTo] = useState<string | null>(null);
-  const [moveCount, setMoveCount] = useState(1);
+  const [moveCount, setMoveCount] = useState(initialMoveCount ?? 1);
   const [openTo, setOpenTo] = useState<string | null>(lot.locationId);
   const [fixText, setFixText] = useState(() => String(Math.round(lot.qtyBase * 100) / 100));
   const [expiry, setExpiry] = useState<string | null>(lot.expiresOn);
