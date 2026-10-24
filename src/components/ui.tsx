@@ -1,6 +1,8 @@
 /** Small set of UI primitives shared by every screen (indigo theme). */
 import React from 'react';
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -32,12 +34,18 @@ export function Screen({
   return (
     <SafeAreaView style={styles.screen} edges={edges}>
       {scroll ? (
-        <ScrollView
-          contentContainerStyle={[styles.screenContent, contentStyle]}
-          keyboardShouldPersistTaps="handled"
-        >
-          {children}
-        </ScrollView>
+        // iOS insets the ScrollView natively (works inside modal sheets); Android is
+        // edge-to-edge, so the window doesn't resize and we pad above the keyboard instead.
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" enabled={Platform.OS === 'android'}>
+          <ScrollView
+            contentContainerStyle={[styles.screenContent, contentStyle]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
+          >
+            {children}
+          </ScrollView>
+        </KeyboardAvoidingView>
       ) : (
         <View style={[styles.screenContent, { flex: 1 }, contentStyle]}>{children}</View>
       )}

@@ -6,12 +6,11 @@ import type { MutationResult } from '@/services/inventory';
 import { evaluateLowStock } from '@/services/alerts';
 import { deliverLowStock, requestPermission, rescheduleAll } from '@/notifications/notifier';
 import { ZeroPrompt } from '@/components/ZeroPrompt';
-import { Toast } from '@/components/Toast';
+import { Toast, type ToastAction } from '@/components/Toast';
 
 interface ToastState {
   message: string;
-  actionLabel?: string;
-  onAction?: () => void;
+  actions: ToastAction[];
   key: number;
 }
 
@@ -26,7 +25,7 @@ interface AppValue {
    */
   mutate: <T>(fn: (ctx: Ctx) => T) => T | undefined;
   refresh: () => void;
-  showToast: (message: string, action?: { label: string; onPress: () => void }) => void;
+  showToast: (message: string, ...actions: ToastAction[]) => void;
 }
 
 const AppContext = createContext<AppValue | null>(null);
@@ -98,8 +97,8 @@ export function AppProvider({ ctx, children }: { ctx: Ctx; children: React.React
     [ctx, scheduleReschedule],
   );
 
-  const showToast = useCallback((message: string, action?: { label: string; onPress: () => void }) => {
-    setToast({ message, actionLabel: action?.label, onAction: action?.onPress, key: Date.now() });
+  const showToast = useCallback((message: string, ...actions: ToastAction[]) => {
+    setToast({ message, actions, key: Date.now() });
   }, []);
 
   const value = useMemo<AppValue>(
@@ -127,8 +126,7 @@ export function AppProvider({ ctx, children }: { ctx: Ctx; children: React.React
         <Toast
           key={toast.key}
           message={toast.message}
-          actionLabel={toast.actionLabel}
-          onAction={toast.onAction}
+          actions={toast.actions}
           onHide={() => setToast(null)}
         />
       )}
