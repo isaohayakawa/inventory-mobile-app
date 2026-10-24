@@ -7,7 +7,7 @@ import { colors } from '@/theme';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 function TabIcon({ name, focusedName, color, focused }: { name: IconName; focusedName: IconName; color: ColorValue; focused: boolean }) {
-  return <Ionicons name={focused ? focusedName : name} size={23} color={color} />;
+  return <Ionicons name={focused ? focusedName : name} size={23} color={typeof color === 'number' ? undefined : (color ?? undefined)} />;
 }
 
 const icon = (name: IconName, focusedName: IconName) => {
