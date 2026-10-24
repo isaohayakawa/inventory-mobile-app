@@ -61,6 +61,11 @@ export function packCount(lot: StockLot, packages: PackageMap): number {
 }
 
 /** Human description of one lot, e.g. "2 × 6-pack · 12 rolls" or "4 rolls" or "½ bottle". */
+/** Whether to show Sealed / Opened for this item's stock. Level tracking needs it (opened → how full). */
+export function tracksLotState(item: Item): boolean {
+  return item.tracksState || item.tracking === 'level';
+}
+
 export function describeLot(lot: StockLot, item: Item, packages: PackageMap): string {
   const pkg = lot.packageId ? packages.get(lot.packageId) : undefined;
   if (lot.state === 'opened') {

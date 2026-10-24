@@ -52,6 +52,8 @@ export const items = sqliteTable(
     baseUnit: text('base_unit').notNull(),
     /** 'count' = subtract units; 'level' = opened units tracked as Full / ¾ / ½ / Low / Empty. */
     tracking: text('tracking', { enum: ['count', 'level'] }).notNull().default('count'),
+    /** Whether stock is shown as Sealed / Opened. Off for things bought loose, like apples. */
+    tracksState: integer('tracks_state', { mode: 'boolean' }).notNull().default(true),
     /** Household-total threshold in base units ("buy more"). */
     minTotal: real('min_total'),
     alwaysKeep: integer('always_keep', { mode: 'boolean' }).notNull().default(false),

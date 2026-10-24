@@ -39,7 +39,8 @@ export default function AddItemScreen() {
   const [newPkgName, setNewPkgName] = useState('');
   const [newPkgQty, setNewPkgQty] = useState('6');
   const [count, setCount] = useState(1);
-  const [state, setState] = useState<'sealed' | 'opened'>('sealed');
+  // null until the user picks; then State follows the package (see stateValue).
+  const [stateChoice, setStateChoice] = useState<'sealed' | 'opened' | 'na' | null>(null);
   const [level, setLevel] = useState(1);
   const [locationId, setLocationId] = useState<string | null>(
     lastLocationId && locs.some((l) => l.id === lastLocationId) ? lastLocationId : locs.find((l) => l.name === 'Pantry')?.id ?? locs[0]?.id ?? null,
@@ -61,6 +62,10 @@ export default function AddItemScreen() {
   ];
   const unitsPer =
     pkgChoice === SINGLE ? 1 : pkgChoice === NEW_PKG ? Math.max(1, Number(newPkgQty) || 1) : commonPkgs[Number(pkgChoice.slice(1))]?.containsQty ?? 1;
+  // Sealed / Opened only matters for packages by default; level tracking always needs it (opened → how full).
+  const stateValue =
+    tracking === 'level' && stateChoice === 'na' ? 'sealed' : stateChoice ?? (pkgChoice !== SINGLE || tracking === 'level' ? 'sealed' : 'na');
+  const state = stateValue === 'opened' ? 'opened' : 'sealed';
 
   const choose = (s: Suggestion) => {
     setFocused(false);
@@ -88,6 +93,7 @@ export default function AddItemScreen() {
       setBaseUnit(c.baseUnit);
       setCategory(c.category);
       setTracking(c.level ? 'level' : 'count');
+      setStateChoice(null);
       setPkgChoice(SINGLE);
       setShowExpiry(!!c.perishable);
       return;
@@ -132,6 +138,7 @@ export default function AddItemScreen() {
         baseUnit: baseUnit.trim() || 'unit',
         category,
         tracking,
+        tracksState: stateValue !== 'na',
         minTotal: minTotal.trim() ? Number(minTotal) : null,
         sizeAmount: amount != null && !Number.isNaN(amount) ? amount : null,
         sizeUnit,
@@ -252,13 +259,16 @@ export default function AddItemScreen() {
             </View>
           ) : null}
 
-          <Field label="State">
+          <Field label="State" hint={stateValue === 'na' ? 'Not tracked for this item, e.g. loose apples or oranges.' : undefined}>
             <Segmented
-              value={state}
-              onChange={setState}
+              value={stateValue}
+              // N/A turns off sealed/opened tracking for the item.
+              onChange={setStateChoice}
               options={[
                 { value: 'sealed', label: 'Sealed' },
                 { value: 'opened', label: 'Opened' },
+                // Level tracking needs a state (opened → how full).
+                ...(tracking === 'count' ? [{ value: 'na' as const, label: 'N/A' }] : []),
               ]}
             />
           </Field>

@@ -1,0 +1,1 @@
+ALTER TABLE `item` ADD `tracks_state` integer DEFAULT true NOT NULL;

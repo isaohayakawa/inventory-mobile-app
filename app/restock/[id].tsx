@@ -8,7 +8,7 @@ import { DateInput, LocationSelect, SelectField } from '@/components/pickers';
 import { type } from '@/theme';
 import { addStock, addPackage, undoAdd } from '@/services/inventory';
 import { activeLocations } from '@/services/snapshot';
-import { formatUnits, plural, unitsPerPackage } from '@/domain/quantity';
+import { formatUnits, plural, tracksLotState, unitsPerPackage } from '@/domain/quantity';
 import { inventoryEvents, stockLots } from '@/db/schema';
 
 const SINGLE = '__single__';
@@ -83,7 +83,14 @@ export default function RestockScreen() {
         if (!newPkgName.trim()) throw new Error('Name the new package, e.g. "12-pack".');
         packageId = addPackage(c, { itemId: item.id, name: newPkgName, containsQty: unitsPer });
       }
-      return addStock(c, { itemId: item.id, packageId, count, state, locationId, expiresOn: showExpiry ? expiresOn : null });
+      return addStock(c, {
+        itemId: item.id,
+        packageId,
+        count,
+        state: tracksLotState(item) ? state : 'sealed',
+        locationId,
+        expiresOn: showExpiry ? expiresOn : null,
+      });
     });
     if (!r) return;
     showToast(`Added ${formatUnits(total, item.baseUnit)} of ${item.name}`, {
@@ -124,16 +131,18 @@ export default function RestockScreen() {
         </View>
       ) : null}
 
-      <Field label="State">
-        <Segmented
-          value={state}
-          onChange={setState}
-          options={[
-            { value: 'sealed', label: 'Sealed' },
-            { value: 'opened', label: 'Opened' },
-          ]}
-        />
-      </Field>
+      {tracksLotState(item) ? (
+        <Field label="State">
+          <Segmented
+            value={state}
+            onChange={setState}
+            options={[
+              { value: 'sealed', label: 'Sealed' },
+              { value: 'opened', label: 'Opened' },
+            ]}
+          />
+        </Field>
+      ) : null}
 
       <Field label="Location">
         <LocationSelect value={locationId} locations={locs} onChange={setLocationId} />

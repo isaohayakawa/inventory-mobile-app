@@ -5,7 +5,7 @@ import { useApp } from '@/state/AppContext';
 import { Button, Card, IconButton, Row, Screen, SectionLabel, Tag, Title } from '@/components/ui';
 import { LotSheet } from '@/components/LotSheet';
 import { colors, type } from '@/theme';
-import { describeLot, formatQty, formatUnits, plural } from '@/domain/quantity';
+import { describeLot, formatQty, formatUnits, plural, tracksLotState } from '@/domain/quantity';
 import { expiryStatusFor, itemHistory, locationName } from '@/services/snapshot';
 import { consumeOne } from '@/services/inventory';
 import { formatShortDate, relativeDay } from '@/lib/time';
@@ -37,9 +37,10 @@ export default function ItemDetailScreen() {
   const lotRow = (lot: StockLot, first: boolean) => {
     const status = expiryStatusFor(lot.expiresOn, snapshot.prefs.expiryWindowDays);
     const expColor = status === 'expired' ? colors.low : status === 'soon' ? '#B26B00' : colors.textSecondary;
-    const quickUse = lot.state === 'opened' && item.tracking === 'count';
+    const showState = tracksLotState(item);
+    const quickUse = item.tracking === 'count' && (lot.state === 'opened' || !showState);
     return (
-      <Row key={lot.id} first={first} onPress={() => setSelected(lot)} accessibilityLabel={`${describeLot(lot, item, snapshot.packages)}, ${lot.state}`}>
+      <Row key={lot.id} first={first} onPress={() => setSelected(lot)} accessibilityLabel={`${describeLot(lot, item, snapshot.packages)}${showState ? `, ${lot.state}` : ''}`}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={type.body}>{describeLot(lot, item, snapshot.packages)}</Text>
           {lot.expiresOn ? (
@@ -49,7 +50,7 @@ export default function ItemDetailScreen() {
             </Text>
           ) : null}
         </View>
-        <Tag label={lot.state === 'sealed' ? 'Sealed' : 'Opened'} tone={lot.state === 'sealed' ? 'sealed' : 'opened'} />
+        {showState ? <Tag label={lot.state === 'sealed' ? 'Sealed' : 'Opened'} tone={lot.state === 'sealed' ? 'sealed' : 'opened'} /> : null}
         {quickUse ? (
           <IconButton icon="remove" label={`Used 1 from ${locationName(snapshot, lot.locationId)}`} onPress={() => mutate((c) => consumeOne(c, { itemId: item.id, lotId: lot.id }))} />
         ) : null}

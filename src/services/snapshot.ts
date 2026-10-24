@@ -16,7 +16,7 @@ import {
   type ItemLocationSetting,
   type NotificationPreference,
 } from '@/db/schema';
-import { type PackageMap, breakdown } from '@/domain/quantity';
+import { type PackageMap, breakdown, tracksLotState } from '@/domain/quantity';
 import { daysUntil } from '@/lib/time';
 
 export type ExpiryStatus = 'expired' | 'soon' | null;
@@ -173,7 +173,7 @@ export function loadSnapshot(ctx: Ctx): Snapshot {
       lowTotal,
       lowLocations,
       isLow: lowTotal || lowLocations.length > 0,
-      hasOpened: itemLots.some((l) => l.state === 'opened'),
+      hasOpened: tracksLotState(item) && itemLots.some((l) => l.state === 'opened'),
       isOut: total <= 0,
       soonestExpiry,
       expiryStatus: expiryStatusFor(soonestExpiry, prefs.expiryWindowDays),

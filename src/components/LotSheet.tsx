@@ -8,7 +8,7 @@ import { type } from '@/theme';
 import { useApp } from '@/state/AppContext';
 import { activeLocations, expiryStatusFor, locationName } from '@/services/snapshot';
 import { correctLot, moveStock, openPack, removeStock, setLevel, setLotExpiry, consumeOne, type RemoveReason } from '@/services/inventory';
-import { describeLot, formatUnits, LEVELS, levelLabel, unitsPerPackage } from '@/domain/quantity';
+import { describeLot, formatUnits, LEVELS, levelLabel, tracksLotState, unitsPerPackage } from '@/domain/quantity';
 import { formatShortDate } from '@/lib/time';
 
 type Mode = 'menu' | 'move' | 'fix' | 'expiry' | 'remove' | 'open';
@@ -54,7 +54,8 @@ function LotSheetContent({ lot, item, onClose, moveCount: initialMoveCount }: Lo
   return (
     <Sheet visible onClose={onClose} title={title}>
       <Text style={type.meta}>
-        {lot.state === 'sealed' ? 'Sealed' : 'Opened'} · {describeLot(lot, item, pkgs)}
+        {tracksLotState(item) ? `${lot.state === 'sealed' ? 'Sealed' : 'Opened'} · ` : ''}
+        {describeLot(lot, item, pkgs)}
         {lot.expiresOn ? ` · ${status === 'expired' ? 'expired' : 'expires'} ${formatShortDate(lot.expiresOn)}` : ''}
       </Text>
 
@@ -89,7 +90,7 @@ function LotSheetContent({ lot, item, onClose, moveCount: initialMoveCount }: Lo
               }}
             />
           ) : null}
-          {lot.state === 'sealed' ? (
+          {lot.state === 'sealed' && tracksLotState(item) ? (
             <Button label={`Open ${isPack ? `one ${pkg?.name ?? 'pack'}` : `a ${item.baseUnit}`}`} onPress={() => setMode('open')} />
           ) : null}
           <Button label="Move…" onPress={() => setMode('move')} />

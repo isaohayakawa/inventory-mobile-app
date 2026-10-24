@@ -7,7 +7,7 @@ import { ItemRow } from '@/components/ItemRow';
 import { SwipeRow } from '@/components/SwipeRow';
 import { LocationChips, type LocationChipInfo } from '@/components/LocationChips';
 import { colors, type } from '@/theme';
-import { formatQty, formatUnits, levelLabel } from '@/domain/quantity';
+import { formatQty, formatUnits, levelLabel, tracksLotState } from '@/domain/quantity';
 import { activeLocations, expiryStatusFor, locationName, stockElsewhere, type ItemSummary } from '@/services/snapshot';
 import { matchesSearch } from '@/services/search';
 import { addToShoppingList, needsBuying } from '@/services/shopping';
@@ -218,7 +218,7 @@ export default function InventoryScreen() {
                   case 'low':
                     return here.low;
                   case 'opened':
-                    return here.lots.some((x) => x.state === 'opened');
+                    return tracksLotState(s.item) && here.lots.some((x) => x.state === 'opened');
                   case 'out':
                     return here.qty <= 0;
                   case 'expiring':
@@ -243,10 +243,17 @@ export default function InventoryScreen() {
                     </Row>
                   ) : (
                     rows.map(({ s, here }, i) => {
-                      const states = [...new Set(here!.lots.map((x) => (x.state === 'opened' ? 'Opened' : 'Sealed')))].join(' · ');
-                      const alert = here!.minQty != null ? ` · alert ≤ ${formatQty(here!.minQty)}` : '';
+                      const states = tracksLotState(s.item)
+                        ? [...new Set(here!.lots.map((x) => (x.state === 'opened' ? 'Opened' : 'Sealed')))].join(' · ')
+                        : '';
                       const exp = here!.lots.find((x) => x.expiresOn)?.expiresOn;
-                      const meta = `${states || 'None left'}${alert}${exp ? ` · exp ${formatShortDate(exp)}` : ''}`;
+                      const meta = [
+                        here!.qty <= 0 ? 'None left' : states,
+                        here!.minQty != null ? `alert ≤ ${formatQty(here!.minQty)}` : '',
+                        exp ? `exp ${formatShortDate(exp)}` : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · ');
                       return (
                         <SwipeRow key={s.item.id} actionLabel="Bought more" onAction={() => restock(s)}>
                           <ItemRow
