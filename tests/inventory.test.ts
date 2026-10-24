@@ -21,7 +21,7 @@ import { deleteLocation, createLocation, reorderLocation } from '@/services/loca
 import { evaluateLowStock, buildDigest } from '@/services/alerts';
 import { loadSnapshot, stockElsewhere, suggestedMoveQty } from '@/services/snapshot';
 import { suggest, similarItems, nameOf } from '@/services/search';
-import { describeLot } from '@/domain/quantity';
+import { describeLot, tracksLotState } from '@/domain/quantity';
 import { setNow } from '@/lib/time';
 
 let ctx: Ctx;
@@ -134,6 +134,16 @@ describe('using, moving, removing', () => {
     const sealedInCloset = s.lots.filter((l) => l.locationId === closet && l.state === 'sealed');
     expect(sealedInCloset).toHaveLength(1);
     expect(sealedInCloset[0].qtyBase).toBe(12);
+  });
+
+  it('tracks sealed/opened unless turned off; level tracking always needs it', () => {
+    const item = (id: string) => ctx.db.select().from(items).where(eq(items.id, id)).get()!;
+    const tp = createItem(ctx, { name: 'Paper towels', baseUnit: 'roll' }).itemId;
+    const apples = createItem(ctx, { name: 'Apples', baseUnit: 'apple', tracksState: false }).itemId;
+    expect(tracksLotState(item(tp))).toBe(true);
+    expect(tracksLotState(item(apples))).toBe(false);
+    updateItem(ctx, apples, { tracking: 'level' });
+    expect(tracksLotState(item(apples))).toBe(true);
   });
 
   it('removes with a reason and reports items that reach zero', () => {

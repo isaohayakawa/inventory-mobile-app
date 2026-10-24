@@ -210,6 +210,7 @@ export interface NewItemInput {
   baseUnit: string;
   category?: string | null;
   tracking?: 'count' | 'level';
+  tracksState?: boolean;
   minTotal?: number | null;
   sizeAmount?: number | null;
   sizeUnit?: string | null;
@@ -230,6 +231,7 @@ export function createItem(ctx: Ctx, input: NewItemInput): { itemId: string; pac
         baseUnit: input.baseUnit.trim() || 'unit',
         category: input.category ?? null,
         tracking: input.tracking ?? 'count',
+        tracksState: input.tracksState ?? true,
         minTotal: input.minTotal ?? null,
         sizeAmount: input.sizeAmount ?? null,
         sizeUnit: input.sizeAmount != null ? input.sizeUnit ?? null : null,
@@ -276,7 +278,9 @@ export function addPackage(
 export function updateItem(
   ctx: Ctx,
   itemId: string,
-  patch: Partial<Pick<Item, 'name' | 'baseUnit' | 'category' | 'tracking' | 'minTotal' | 'sizeAmount' | 'sizeUnit' | 'alwaysKeep'>>,
+  patch: Partial<
+    Pick<Item, 'name' | 'baseUnit' | 'category' | 'tracking' | 'tracksState' | 'minTotal' | 'sizeAmount' | 'sizeUnit' | 'alwaysKeep'>
+  >,
 ): void {
   ctx.db.update(items).set(patch).where(eq(items.id, itemId)).run();
 }

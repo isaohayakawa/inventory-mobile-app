@@ -91,6 +91,17 @@ export default function ItemSettingsScreen() {
           ]}
         />
       </Field>
+      {item.tracking === 'count' ? (
+        <Card>
+          <ToggleRow
+            first
+            label="Track sealed / opened"
+            sub="Turn off for things bought loose, like apples or oranges."
+            value={item.tracksState}
+            onChange={(v) => mutate((c) => updateItem(c, item.id, { tracksState: v }))}
+          />
+        </Card>
+      ) : null}
       <Field label="Size (optional)">
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Input style={{ flex: 1 }} value={sizeAmount} onChangeText={setSizeAmount} keyboardType="decimal-pad" placeholder="Amount" />
